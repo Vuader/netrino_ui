@@ -1,13 +1,14 @@
-from __future__ import print_function
-import nfw
 import re
 import sys
 import json
 from pyipcalc import *
-from jinja2 import Template
 from collections import OrderedDict
-from tachyon.common import RestClient
-from tachyon.ui import view, edit, create, datatable
+from tachyonic import jinja
+from tachyonic.neutrino import exceptions as exceptions
+from tachyonic.neutrino import constants as const
+from tachyonic.client import Client as RestClient
+from tachyonic.ui.views import ui
+from tachyonic.ui.views.datatable import datatable
 from netrino.ui import model
 
 
@@ -38,58 +39,58 @@ def viewIGroup(req, resp, id=None):
     if id:
         api = RestClient(req.context['restapi'])
         headers, response = api.execute(
-            nfw.HTTP_GET, "/infrastructure/network/igroups/%s" % (id,))
+            const.HTTP_GET, "/infrastructure/network/igroups/%s" % (id,))
         form = model.IGroup(response, validate=False, readonly=True)
-        view(req, resp, content=form, id=id, title='View Interface Group')
+        ui.view(req, resp, content=form, id=id, title='View Interface Group')
     else:
         title = 'Interface Groups'
         fields = OrderedDict()
         fields['name'] = 'Interface Group Name'
         dt = datatable(
             req, 'igroups', '/infrastructure/network/igroups?view=datatable', fields, view_button=True)
-        view(req, resp, content=dt, title=title)
+        ui.view(req, resp, content=dt, title=title)
 
 
 def editIGroup(req, resp, id):
-    if req.method == nfw.HTTP_POST:
+    if req.method == const.HTTP_POST:
         form = model.IGroup(req.post, validate=True, readonly=True)
         api = RestClient(req.context['restapi'])
-        headers, response = api.execute(nfw.HTTP_PUT, "/infrastructure/network/igroups/%s" %
+        headers, response = api.execute(const.HTTP_PUT, "/infrastructure/network/igroups/%s" %
                                         (id,), form)
     else:
         api = RestClient(req.context['restapi'])
         headers, response = api.execute(
-            nfw.HTTP_GET, "/infrastructure/network/igroups/%s" % (id,))
+            const.HTTP_GET, "/infrastructure/network/igroups/%s" % (id,))
         form = model.IGroup(response, validate=False)
-        edit(req, resp, content=form, id=id, title='Edit Interface Group')
+        ui.edit(req, resp, content=form, id=id, title='Edit Interface Group')
 
 
 def createIGroup(req, resp):
-    if req.method == nfw.HTTP_POST:
+    if req.method == const.HTTP_POST:
         try:
             form = model.IGroup(req.post, validate=True)
             api = RestClient(req.context['restapi'])
             headers, response = api.execute(
-                nfw.HTTP_POST, "/infrastructure/network/igroups", form)
+                const.HTTP_POST, "/infrastructure/network/igroups", form)
             if 'id' in response:
                 id = response['id']
                 viewIGroup(req, resp, id=id)
-        except nfw.HTTPBadRequest as e:
+        except const.HTTPBadRequest as e:
             form = model.User(req, validate=False)
-            create(req, resp, content=form, title='Create User', error=[e])
+            ui.create(req, resp, content=form, title='Create User', error=[e])
     else:
         form = model.IGroup(req.post, validate=False)
-        create(req, resp, content=form, title='Create Interface Group')
+        ui.create(req, resp, content=form, title='Create Interface Group')
 
 
 def deleteIGroup(req, resp, id):
     try:
         api = RestClient(req.context['restapi'])
         headers, response = api.execute(
-            nfw.HTTP_DELETE, "/infrastructure/network/igroups/%s" % (id,))
+            const.HTTP_DELETE, "/infrastructure/network/igroups/%s" % (id,))
         viewIGroup(req, resp)
-    except nfw.HTTPBadRequest as e:
-        edit(req, resp, content=form, id=id, title='Edit Interface Group')
+    except const.HTTPBadRequest as e:
+        ui.edit(req, resp, content=form, id=id, title='Edit Interface Group')
 
 
 def viewService(req, resp, id=None):
@@ -97,12 +98,12 @@ def viewService(req, resp, id=None):
     if id:
         api = RestClient(req.context['restapi'])
         headers, service = api.execute(
-            nfw.HTTP_GET, "/infrastructure/network/services/%s" % (id,))
+            const.HTTP_GET, "/infrastructure/network/services/%s" % (id,))
         if return_format == "fields":
             fields = service['fields'].split(',')
             return json.dumps(fields, indent=4)
         templateFile = 'netrino.ui/service/createservice.html'
-        t = nfw.jinja.get_template(templateFile)
+        t = jinja.get_template(templateFile)
         renderValues = {}
         renderValues['view'] = 'view'
         renderValues['serviceID'] = id
@@ -114,12 +115,12 @@ def viewService(req, resp, id=None):
         renderValues['deactivate'] = service['deactivate_snippet']
         form = t.render(**renderValues)
         title = service['name']
-        view(req, resp, id=id, content=form, title=title)
+        ui.view(req, resp, id=id, content=form, title=title)
     else:
         if return_format == "select2":
             api = RestClient(req.context['restapi'])
             headers, response = api.execute(
-                nfw.HTTP_GET, "/infrastructure/network/services?view=datatable")
+                const.HTTP_GET, "/infrastructure/network/services?view=datatable")
             result = []
             for r in response:
                 result.append({'id': r['id'], 'text': r['name']})
@@ -133,11 +134,11 @@ def viewService(req, resp, id=None):
             fields['interface_group'] = 'Interface Group'
             dt = datatable(
                 req, 'services', '/infrastructure/network/services?view=datatable', fields, view_button=True)
-            view(req, resp, content=dt, title=title)
+            ui.view(req, resp, content=dt, title=title)
 
 
 def editService(req, resp, id, **kwargs):
-    if req.method == nfw.HTTP_POST:
+    if req.method == const.HTTP_POST:
         try:
             api = RestClient(req.context['restapi'])
             values = req.post
@@ -148,19 +149,19 @@ def editService(req, resp, id, **kwargs):
             form = model.NetworkService(req.post, validate=True)
             form['fields'] = fields
             headers, response = api.execute(
-                nfw.HTTP_PUT, "/infrastructure/network/services/%s" % (id,), form)
+                const.HTTP_PUT, "/infrastructure/network/services/%s" % (id,), form)
             if 'id' in response:
                 id = response['id']
                 viewService(req, resp, id=id)
-        except nfw.HTTPBadRequest as e:
-            req.method = nfw.HTTP_GET
+        except const.HTTPBadRequest as e:
+            req.method = const.HTTP_GET
             editService(req, resp, error=[e])
     else:
         api = RestClient(req.context['restapi'])
         headers, service = api.execute(
-            nfw.HTTP_GET, "/infrastructure/network/services/%s" % (id,))
+            const.HTTP_GET, "/infrastructure/network/services/%s" % (id,))
         templateFile = 'netrino.ui/service/createservice.html'
-        t = nfw.jinja.get_template(templateFile)
+        t = jinja.get_template(templateFile)
         renderValues = {}
         renderValues['serviceID'] = id
         renderValues['serviceName'] = service['name']
@@ -171,11 +172,11 @@ def editService(req, resp, id, **kwargs):
         renderValues['deactivate'] = service['deactivate_snippet']
         form = t.render(**renderValues)
         title = service['name']
-        edit(req, resp, id=id, content=form, title=title, **kwargs)
+        ui.edit(req, resp, id=id, content=form, title=title, **kwargs)
 
 
 def createService(req, resp, **kwargs):
-    if req.method == nfw.HTTP_POST:
+    if req.method == const.HTTP_POST:
         try:
             api = RestClient(req.context['restapi'])
             values = req.post
@@ -186,12 +187,12 @@ def createService(req, resp, **kwargs):
             form = model.NetworkService(req.post, validate=True)
             form['fields'] = fields
             headers, response = api.execute(
-                nfw.HTTP_POST, "/infrastructure/network/services", form)
+                const.HTTP_POST, "/infrastructure/network/services", form)
             if 'id' in response:
                 id = response['id']
                 viewService(req, resp, id=id)
-        except nfw.HTTPBadRequest as e:
-            req.method = nfw.HTTP_GET
+        except const.HTTPBadRequest as e:
+            req.method = const.HTTP_GET
             createService(req, resp, error=[e])
     else:
         renderValues = {}
@@ -203,10 +204,10 @@ def createService(req, resp, **kwargs):
             renderValues['activate'] = req.post.get('activate_snippet')
             renderValues['deactivate'] = req.post.get('deactivate_snippet')
         templateFile = 'netrino.ui/service/createservice.html'
-        t = nfw.jinja.get_template(templateFile)
+        t = jinja.get_template(templateFile)
         form = t.render(**renderValues)
         title = 'Create a Network Service'
-        create(req, resp, content=form,
+        ui.create(req, resp, content=form,
                title='Create Network Service', **kwargs)
 
 
@@ -214,7 +215,7 @@ def deleteService(req, resp, id):
     try:
         api = RestClient(req.context['restapi'])
         headers, response = api.execute(
-            nfw.HTTP_DELETE, "/infrastructure/network/services/%s" % (id,))
+            const.HTTP_DELETE, "/infrastructure/network/services/%s" % (id,))
         viewService(req, resp)
     except Exception, e:  # hierdie gebeur nie met api.execute nie
         editService(req, resp, id, error=[e])
@@ -244,7 +245,7 @@ def viewDevice(req, resp, id=None, **kwargs):
         back_url = "/ui/infrastructure/network/device/"
         api = RestClient(req.context['restapi'])
         response_headers, device = api.execute(
-            nfw.HTTP_GET, "/infrastructure/network/devices/" + id)
+            const.HTTP_GET, "/infrastructure/network/devices/" + id)
         renderValues['title'] = device['name']
         description = '<form action="../add/'
         description += id
@@ -255,7 +256,7 @@ def viewDevice(req, resp, id=None, **kwargs):
                 </form>'''
         renderValues['description'] = description
         response_headers, igroups = api.execute(
-            nfw.HTTP_GET, "/infrastructure/network/igroups")  # This must be done by browser rather
+            const.HTTP_GET, "/infrastructure/network/igroups")  # This must be done by browser rather
         renderValues['igroups'] = igroups
         renderValues['device_id'] = id
         renderValues['edit_url'] = edit_url
@@ -273,7 +274,7 @@ def viewDevice(req, resp, id=None, **kwargs):
         if return_format == "select2":
             api = RestClient(req.context['restapi'])
             headers, response = api.execute(
-                nfw.HTTP_GET, "/infrastructure/network/devices")
+                const.HTTP_GET, "/infrastructure/network/devices")
             result = []
             for r in response:
                 result.append({'id': r['id'], 'text': r['name']})
@@ -288,7 +289,7 @@ def viewDevice(req, resp, id=None, **kwargs):
                 fields, view_button=True)
             renderValues['title'] = 'Network Devices'
 
-    view(req, resp, content=dt, **renderValues)
+    ui.view(req, resp, content=dt, **renderValues)
 
 
 def portsIGroup(req, resp, id, **kwargs):
@@ -304,9 +305,9 @@ def portsIGroup(req, resp, id, **kwargs):
     renderValues['window'] = '#window_content'
     renderValues['dt'] = dt
     templateFile = 'netrino.ui/device/portigroup.html'
-    t = nfw.jinja.get_template(templateFile)
+    t = jinja.get_template(templateFile)
     content = t.render(**renderValues)
-    view(req, resp, content=content, **renderValues)
+    ui.view(req, resp, content=content, **renderValues)
 
 
 def createDevice(req, resp):
@@ -319,10 +320,10 @@ def createDevice(req, resp):
     renderValues['resource'] = 'Device'
 
     templateFile = 'netrino.ui/device/create.html'
-    t = nfw.jinja.get_template(templateFile)
+    t = jinja.get_template(templateFile)
     form = t.render(**renderValues)
 
-    create(req, resp, content=form, **renderValues)
+    ui.create(req, resp, content=form, **renderValues)
 
 
 def editDevice(req, resp, id):
@@ -332,7 +333,7 @@ def editDevice(req, resp, id):
 
     api = RestClient(req.context['restapi'])
     response_headers, device = api.execute(
-        nfw.HTTP_GET, "/infrastructure/network/devices/" + id)
+        const.HTTP_GET, "/infrastructure/network/devices/" + id)
     if device['id']:
         renderValues['device_ip'] = dec2ip(int(id), 4)
         renderValues['id'] = id
@@ -347,13 +348,13 @@ def editDevice(req, resp, id):
         renderValues['formid'] = 'device'
         renderValues['resource'] = 'Device'
     else:
-        raise nfw.HTTPBadRequest("Device not found")  # Device not found
+        raise const.HTTPBadRequest("Device not found")  # Device not found
 
     templateFile = 'netrino.ui/device/create.html'
-    t = nfw.jinja.get_template(templateFile)
+    t = jinja.get_template(templateFile)
     form = t.render(**renderValues)
 
-    edit(req, resp, content=form, **renderValues)
+    ui.edit(req, resp, content=form, **renderValues)
 
 
 def createDevicePost(req, resp):
@@ -366,15 +367,15 @@ def createDevicePost(req, resp):
         subnet += "/32"
         try:
             subnet = IPNetwork(subnet)
-        except e:
-            raise(nfw.Error(e))
+        except:
+            raise exceptions.HTTPBadRequest(title="Failure", description="Invalid IP address")
     results = []
     for ip in subnet:
         ver = ip._version
         ip = ip.ip_network
         data['id'] = ip2dec(ip, 4)
         response_headers, result = api.execute(
-            nfw.HTTP_POST, "/infrastructure/network/devices", obj=data)
+            const.HTTP_POST, "/infrastructure/network/devices", obj=data)
         results.append(result)
     return results
 
@@ -388,20 +389,20 @@ def updateDevice(req, device_id):
     id = device_id
     api = RestClient(req.context['restapi'])
     response_headers, device = api.execute(
-        nfw.HTTP_PUT, "/infrastructure/network/devices/" + id)
+        const.HTTP_PUT, "/infrastructure/network/devices/" + id)
 
 
 def confirmRMdevice(req, resp, id):
     api = RestClient(req.context['restapi'])
     response_headers, device = api.execute(
-        nfw.HTTP_GET, "/infrastructure/network/devices/" + device_id)
+        const.HTTP_GET, "/infrastructure/network/devices/" + device_id)
     if not id in device:
-        raise nfw.HTTPBadRequest("Device not found: %s" % device_id)
+        raise const.HTTPBadRequest("Device not found: %s" % device_id)
     request_headers = {}
     request_headers['X-Search-Specific'] = 'device=' + \
         device_id + ',status=ACTIVE'
     response_headers, result = api.execute(
-        nfw.HTTP_GET, "/infrastructure/network/service_requests/", headers=request_headers)
+        const.HTTP_GET, "/infrastructure/network/service_requests/", headers=request_headers)
     num_serv = len(result)
     templateFile = 'netrino.ui/device/rmdevice.html'
     renderValues = {'title': "Remove " + device[device_id]['name']}
@@ -409,22 +410,22 @@ def confirmRMdevice(req, resp, id):
         warn = (dec2ip(int(device_id), 4), str(num_serv))
         renderValues['warn'] = warn
     renderValues['device_id'] = device_id
-    t = nfw.jinja.get_template(templateFile)
+    t = jinja.get_template(templateFile)
     form = t.render(**renderValues)
-    edit(req, resp, content=form, id=id, **renderValues)
+    ui.edit(req, resp, content=form, id=id, **renderValues)
 
 
 def deleteDevice(req, device_id):
     api = RestClient(req.context['restapi'])
     response_headers, result = api.execute(
-        nfw.HTTP_DELETE, "/infrastructure/network/devices/" + device_id)
+        const.HTTP_DELETE, "/infrastructure/network/devices/" + device_id)
     return result
 
 
 def getPorts(req, id):
     api = RestClient(req.context['restapi'])
     response_headers, response = api.execute(
-        nfw.HTTP_GET, "/infrastructure/network/devices/%s/ports" % (id,))
+        const.HTTP_GET, "/infrastructure/network/devices/%s/ports" % (id,))
     return_format = req.headers.get('X-Format')
     if return_format == "select2":
         result = []
@@ -436,7 +437,7 @@ def getPorts(req, id):
 
 
 def createSR(req, resp, **kwargs):
-    if req.method == nfw.HTTP_POST:
+    if req.method == const.HTTP_POST:
         api = RestClient(req.context['restapi'])
         values = req.post
         postValues = {}
@@ -450,7 +451,7 @@ def createSR(req, resp, **kwargs):
         for device in deviceIDs:
             postValues['device'] = int(device)
             headers, response = api.execute(
-                nfw.HTTP_POST, "/infrastructure/network/service_requests", obj=postValues)
+                const.HTTP_POST, "/infrastructure/network/service_requests", obj=postValues)
         viewSR(req, resp)
     else:
         title = 'Create a service request'
@@ -461,21 +462,23 @@ def createSR(req, resp, **kwargs):
         renderValues['formid'] = 'service_request'
         renderValues['app'] = req.get_app()
         templateFile = 'netrino.ui/service_requests/create.html'
-        t = nfw.jinja.get_template(templateFile)
+        t = jinja.get_template(templateFile)
         form = t.render(**renderValues)
 
-        create(req, resp, content=form, **renderValues)
+        ui.create(req, resp, content=form, **renderValues)
 
 
 def viewSR(req, resp, id=None, **kwargs):
     renderValues = {}
     renderValues['window'] = '#window_content'
+    config = req.config.get('endpoints')
+    netrino_api = config.get('netrino_api')
     if id:
-        api = RestClient(req.context['restapi'])
+        api = RestClient(netrino_api)
         headers, response = api.execute(
-            nfw.HTTP_GET, "/infrastructure/network/service_requests/%s" % (id,))
-        templateFile = 'netrino.ui/service_requests/view.html'
-        t = nfw.jinja.get_template(templateFile)
+            const.HTTP_GET, "/infrastructure/network/service_requests/%s" % (id,))
+        templateFile = 'tachyonic.netrino_ui/service_requests/view.html'
+        t = jinja.get_template(templateFile)
         response = response[0]
         renderValues = response
         if response['status'] in ["SUCCESS", "INACTIVE", "UNKNOWN"]:
@@ -490,8 +493,7 @@ def viewSR(req, resp, id=None, **kwargs):
         renderValues['back_url'] = back_url
         renderValues['title'] = "View Service Request"
         content = t.render(**renderValues)
-        log.debug("MYDEBUG: %s" % (str(renderValues),))
-        view(req, resp, content=content, **renderValues)
+        ui.view(req, resp, content=content, **renderValues)
     else:
         fields = OrderedDict()
         fields['creation_date'] = 'Creation Date'
@@ -501,21 +503,21 @@ def viewSR(req, resp, id=None, **kwargs):
         fields['status'] = 'Status'
         content = datatable(
             req, 'service_requests', '/infrastructure/network/service_requests',
-            fields, view_button=True)
+            fields, view_button=True, endpoint="netrino_api")
         renderValues['title'] = "Service Requests"
 
-    view(req, resp, content=content, **renderValues)
+    ui.view(req, resp, content=content, **renderValues)
 
 
 def activateSR(req, resp, id=id):
     api = RestClient(req.context['restapi'])
     headers, response = api.execute(
-        nfw.HTTP_PUT, "/infrastructure/network/service_requests/%s" % (id,))
+        const.HTTP_PUT, "/infrastructure/network/service_requests/%s" % (id,))
     viewSR(req, resp, id=id)
 
 
 def deactivateSR(req, resp, id=id):
     api = RestClient(req.context['restapi'])
     headers, response = api.execute(
-        nfw.HTTP_DELETE, "/infrastructure/network/service_requests/%s" % (id,))
+        const.HTTP_DELETE, "/infrastructure/network/service_requests/%s" % (id,))
     viewSR(req, resp, id=id)
