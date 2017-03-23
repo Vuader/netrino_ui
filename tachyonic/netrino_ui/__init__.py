@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Netrino UI"""
 
-from tachyonic_netrino_ui import metadata
+from tachyonic.netrino_ui import metadata
+from . import views
 
 
 __version__ = metadata.version
