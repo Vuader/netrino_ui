@@ -302,22 +302,42 @@ def viewDevice(req, resp, id=None, **kwargs):
 
 
 def portsIGroup(req, resp, id, **kwargs):
-    back_url = 'infrastructure/network/devices/" + id + "/ports"'
-    fields = OrderedDict()
-    fields['port'] = 'Interface'
-    fields['igroupname'] = 'Interface Group'
-    apiurl = "/infrastructure/network/devices/" + id + "/ports"
-    dt = datatable(req, 'devices', apiurl, fields,
-                   view_button=True, endpoint="netrino_api")
-    back_url = "/ui/infrastructure/network/device/view/%s" % (id,)
-    renderValues = {}
-    renderValues['back_url'] = back_url
-    renderValues['window'] = '#window_content'
-    renderValues['dt'] = dt
-    templateFile = 'tachyonic.netrino_ui/device/portigroup.html'
-    t = jinja.get_template(templateFile)
-    content = t.render(**renderValues)
-    ui.view(req, resp, content=content, **renderValues)
+    if req.method == const.HTTP_POST:
+        igroup = req.post.get('interface_group')
+        api = getAPI(req)
+        api_url = '/infrastructure/network/igroups/%s/port' % (igroup,)
+        data = {'device': id}
+        ports = req.post.getlist('port')
+        for port in ports:
+            data['port'] = port
+            response_headers, result = api.execute(
+                const.HTTP_PUT, api_url, obj=data)
+    else:
+        back_url = 'infrastructure/network/devices/" + id + "/ports"'
+        fields = OrderedDict()
+        fields['port'] = 'Interface'
+        fields['igroupname'] = 'Interface Group'
+        apiurl = "infrastructure/network/devices/" + id + "/ports"
+        app = req.get_app()
+        dt = datatable(req, 'devices', apiurl, fields,
+                       checkbox=True, endpoint="netrino_api",
+                       id_field=0)
+        back_url = "/ui/infrastructure/network/device/view/%s" % (id,)
+        renderValues = {}
+        renderValues['dt'] = dt
+        renderValues['app'] = app
+        renderValues['id'] = id
+        templateFile = 'tachyonic.netrino_ui/device/portigroup.html'
+        t = jinja.get_template(templateFile)
+        content = t.render(**renderValues)
+        # ui.edit(req, resp, content=content, **renderValues)
+        # res = resource(req)
+        kwargs['save_url'] = "%s/%s/%s" % (app,apiurl, 'igroup')
+        kwargs['content'] = content
+        kwargs['back_url'] = back_url
+        kwargs['window'] = '#window_content'
+        t = jinja.get_template('tachyonic.ui/view.html')
+        resp.body = t.render(**kwargs)
 
 
 def createDevice(req, resp):

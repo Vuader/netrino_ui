@@ -1,24 +1,20 @@
 {{ dt }}
-
-
+<div class="form-group netrino-form">
+  <label for="igroup">Interface Group:</label>
+  <select id="igroup" name="interface_group" class="form-control" required>
+    <option value="">Select Interface Group</option>
+  </select>
+</div>
 <script>
-    $(document).ready(function() {
-        
-        $( "button" ).click(function() {
-          $( ".view_button" ).replaceWith( '<input type="checkbox" name="vehicle" value="Bike">' );
-        });
-
-        $(".checkbox").change(function() {
-            if(this.checked) {
-                //Do stuff
-            }
-        });
-
-        $('#portigroup').dataTable( {
-            "fnDrawCallback": function( oSettings ) {
-                alert( 'DataTables has redrawn the table' );
-            }
-        } );
-
+    var element = $('#igroup').select2({
+      placeholder: 'Select Interface Group'
+    });
+    $.getJSON( '{{app}}/infrastructure/network/igroup/view', { view: 'select2' } ).then( function( data ) {
+      for (var d = 0; d < data.length; d++) {
+              var item = data[d];
+              var option = new Option(item.text, item.id, true, false);
+              element.append(option);
+      }
+      element.trigger('change');
     });
 </script>

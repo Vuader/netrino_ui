@@ -40,6 +40,8 @@ class NetworkDevice(object):
                        self.getports, 'network:admin')
         app.router.add(const.HTTP_GET, '/infrastructure/network/device/{id}/ports/igroup',
                        self.portsigroup, 'network:admin')
+        app.router.add(const.HTTP_POST, '/infrastructure/network/devices/{id}/ports/igroup',
+                       self.portsigroup, 'network:admin')
         app.router.add(const.HTTP_GET, '/infrastructure/network/device/view/{id}',
                        self.get, 'network:admin')
         app.router.add(const.HTTP_GET, '/infrastructure/network/device/edit/{id}',
