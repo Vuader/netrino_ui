@@ -5,7 +5,6 @@ import logging
 
 from tachyonic import app
 
-
 log = logging.getLogger(__name__)
 
 

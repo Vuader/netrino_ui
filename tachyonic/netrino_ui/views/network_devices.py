@@ -18,7 +18,7 @@ from ..controllers import portsIGroup
 from ..controllers import editDevice
 from ..controllers import confirmRMdevice
 from ..controllers import deleteDevice
-
+from ..controllers import updateDevice
 
 log = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ class NetworkDevice(object):
             result = updateDevice(req, id)
             viewDevice(req, resp, id=id, errors=result)
 
-    def delete(self, req, resp, device_id=None):
+    def delete(self, req, resp, id):
         if req.method == 'GET':
             confirmRMdevice(req, resp, id=id)
         elif req.method == 'POST':

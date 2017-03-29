@@ -13,10 +13,11 @@ from . import model
 
 
 def getAPI(req):
-        config = req.config.get('endpoints')
-        netrino_api = config.get('netrino_api')
-        api = RestClient(netrino_api)
-        return api
+    config = req.config.get('endpoints')
+    netrino_api = config.get('netrino_api')
+    api = RestClient(netrino_api)
+    return api
+
 
 def getFields(snippet, activate_snippet, deactivate_snippet):
     fields = re.findall('{{ ?(.*?) ?}}', snippet)
@@ -217,7 +218,7 @@ def createService(req, resp, **kwargs):
         form = t.render(**renderValues)
         title = 'Create a Network Service'
         ui.create(req, resp, content=form,
-               title='Create Network Service', **kwargs)
+                  title='Create Network Service', **kwargs)
 
 
 def deleteService(req, resp, id):
@@ -332,7 +333,7 @@ def portsIGroup(req, resp, id, **kwargs):
         content = t.render(**renderValues)
         # ui.edit(req, resp, content=content, **renderValues)
         # res = resource(req)
-        kwargs['save_url'] = "%s/%s/%s" % (app,apiurl, 'igroup')
+        kwargs['save_url'] = "%s/%s/%s" % (app, apiurl, 'igroup')
         kwargs['content'] = content
         kwargs['back_url'] = back_url
         kwargs['window'] = '#window_content'
@@ -398,7 +399,8 @@ def createDevicePost(req, resp):
         try:
             subnet = IPNetwork(subnet)
         except:
-            raise exceptions.HTTPBadRequest(title="Failure", description="Invalid IP address")
+            raise exceptions.HTTPBadRequest(
+                title="Failure", description="Invalid IP address")
     results = []
     for ip in subnet:
         ver = ip._version
@@ -415,8 +417,7 @@ def createDevicePost(req, resp):
 #
 
 
-def updateDevice(req, device_id):
-    id = device_id
+def updateDevice(req, id):
     api = getAPI(req)
     response_headers, device = api.execute(
         const.HTTP_PUT, "/infrastructure/network/devices/" + id)
@@ -425,30 +426,31 @@ def updateDevice(req, device_id):
 def confirmRMdevice(req, resp, id):
     api = getAPI(req)
     response_headers, device = api.execute(
-        const.HTTP_GET, "/infrastructure/network/devices/" + device_id)
+        const.HTTP_GET, "/infrastructure/network/devices/" + id)
     if not id in device:
-        raise exceptions.HTTPBadRequest("Device not found: %s" % device_id)
+        raise exceptions.HTTPBadRequest(title="Not Found",
+                                        description="Device not found: %s" % id)
     request_headers = {}
     request_headers['X-Search-Specific'] = 'device=' + \
-        device_id + ',status=ACTIVE'
+        id + ',status=ACTIVE'
     response_headers, result = api.execute(
         const.HTTP_GET, "/infrastructure/network/service_requests/", headers=request_headers)
     num_serv = len(result)
     templateFile = 'tachyonic.netrino_ui/device/rmdevice.html'
-    renderValues = {'title': "Remove " + device[device_id]['name']}
+    renderValues = {'title': "Remove " + device[id]['name']}
     if num_serv > 0:
-        warn = (dec2ip(int(device_id), 4), str(num_serv))
+        warn = (dec2ip(int(id), 4), str(num_serv))
         renderValues['warn'] = warn
-    renderValues['device_id'] = device_id
+    renderValues['device_id'] = id
     t = jinja.get_template(templateFile)
     form = t.render(**renderValues)
     ui.edit(req, resp, content=form, id=id, **renderValues)
 
 
-def deleteDevice(req, device_id):
+def deleteDevice(req, id):
     api = getAPI(req)
     response_headers, result = api.execute(
-        const.HTTP_DELETE, "/infrastructure/network/devices/" + device_id)
+        const.HTTP_DELETE, "/infrastructure/network/devices/" + id)
     return result
 
 
