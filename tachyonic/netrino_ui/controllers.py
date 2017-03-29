@@ -237,10 +237,7 @@ def viewDevice(req, resp, id=None, **kwargs):
     renderValues['window'] = '#window_content'
     fields = OrderedDict()
     if id:
-        templateFile = 'tachyonic.netrino_ui/device/view.html'
         fields['port'] = 'Interface'
-        #fields['customername'] = 'Customer'
-        #fields['service'] = 'Service'
         fields['alias'] = 'IP'
         fields['prefix_len'] = 'Prefix Length'
         fields['descr'] = 'Description'
@@ -257,28 +254,28 @@ def viewDevice(req, resp, id=None, **kwargs):
         response_headers, device = api.execute(
             const.HTTP_GET, "/infrastructure/network/devices/" + id)
         renderValues['title'] = device['name']
-        description = '<form action="../add/'
-        description += id
-        description += '" method="post">'
-        description += 'As discovered on '
+        #
+        # Perhaps in the future we can have this Refresh button here
+        #
+        #description = '<form action="../add/'
+        #description += id
+        #description += '" method="post">'
+        description = 'As discovered on '
         description += str(device['last_discover'])
-        description += '''. <button name="refreshdevice">Refresh</button>
-                </form>'''
-        renderValues['description'] = description
-        response_headers, igroups = api.execute(
-            const.HTTP_GET, "/infrastructure/network/igroups")  # This must be done by browser rather
-        renderValues['igroups'] = igroups
+        #description += '''. 
+        #        <button name="refreshdevice">Refresh</button>
+        #        </form>'''
         renderValues['device_id'] = id
         renderValues['edit_url'] = edit_url
         renderValues['back_url'] = back_url
         renderValues['window'] = '#window_content'
         renderValues['back'] = True
-        renderValues['description'] = description
         renderValues['create_url'] = ''
+        dt = description + dt
         dt += ('<button class="btn btn-primary" ' +
                'data-url="infrastructure/network/device/' +
                id + '/ports/igroup">' +
-               'Assign Interface Groups</button>')
+               'Assign Interface Groups</button><hr>')
     else:
         return_format = req.headers.get('X-Format')
         if return_format == "select2":
@@ -427,7 +424,7 @@ def confirmRMdevice(req, resp, id):
     api = getAPI(req)
     response_headers, device = api.execute(
         const.HTTP_GET, "/infrastructure/network/devices/" + id)
-    if not id in device:
+    if not 'id' in device:
         raise exceptions.HTTPBadRequest(title="Not Found",
                                         description="Device not found: %s" % id)
     request_headers = {}
@@ -437,7 +434,7 @@ def confirmRMdevice(req, resp, id):
         const.HTTP_GET, "/infrastructure/network/service_requests/", headers=request_headers)
     num_serv = len(result)
     templateFile = 'tachyonic.netrino_ui/device/rmdevice.html'
-    renderValues = {'title': "Remove " + device[id]['name']}
+    renderValues = {'title': "Remove " + device['name']}
     if num_serv > 0:
         warn = (dec2ip(int(id), 4), str(num_serv))
         renderValues['warn'] = warn
@@ -486,16 +483,22 @@ def createSR(req, resp, **kwargs):
                 const.HTTP_POST, "/infrastructure/network/service_requests", obj=postValues)
         viewSR(req, resp)
     else:
+        tenant = req.context.get('tenant_id')
+        if not tenant:
+            raise exceptions.HTTPBadRequest(
+                title="No Tenant selected",
+                description="Please select Tenant")
         title = 'Create a service request'
         renderValues = {'title': title}
         renderValues['window'] = '#window_content'
-        renderValues['submit_url'] = 'infrastructure/network/sr/create'
         renderValues['back_url'] = 'infrastructure/network/sr'
         renderValues['formid'] = 'service_request'
         renderValues['app'] = req.get_app()
+        tenant = req.context.get('tenant_id')
         templateFile = 'tachyonic.netrino_ui/service_requests/create.html'
         t = jinja.get_template(templateFile)
         form = t.render(**renderValues)
+        renderValues['submit_url'] = 'infrastructure/network/sr/create'
 
         ui.create(req, resp, content=form, **renderValues)
 
@@ -513,7 +516,7 @@ def viewSR(req, resp, id=None, **kwargs):
         t = jinja.get_template(templateFile)
         response = response[0]
         renderValues = response
-        if response['status'] in ["SUCCESS", "INACTIVE", "UNKNOWN"]:
+        if response['status'] in ["SUCCESS", "INACTIVE", "UNKNOWN"] and response['service']:
             activate_url = ("infrastructure/network/sr/" +
                             "edit/" + id + "/activate")
             renderValues['activate_url'] = activate_url

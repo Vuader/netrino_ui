@@ -1,11 +1,5 @@
 <div class="netrino-form">
   <div class="form-group">
-    <label for="customer">Customer:</label>
-    <select id="customer" name="customer" class="form-control" required>
-      <option value="">Select Customer</option>
-    </select>
-  </div>
-  <div class="form-group">
     <label for="service">Service Name:</label>
     <select id="service" name="service" class="form-control" required>
       <option value="">Select Service</option>
@@ -31,28 +25,6 @@
 </div>
 
 <script>
-function post(path, params, method) {
-    method = method || "post"; 
-
-    var form = document.createElement("form");
-    form.setAttribute("method", method);
-    form.setAttribute("action", path);
-
-    for(var key in params) {
-        if(params.hasOwnProperty(key)) {
-            var hiddenField = document.createElement("input");
-            hiddenField.setAttribute("type", "hidden");
-            hiddenField.setAttribute("name", key);
-            hiddenField.setAttribute("value", params[key]);
-
-            form.appendChild(hiddenField);
-         }
-    }
-
-    document.body.appendChild(form);
-    form.submit();
-}
-
 function populateSelect2(path, element) {
     var s2element = $(element).select2();
     $.ajax({
@@ -126,7 +98,6 @@ $(document).ready(function(){
           additionalFields(service_id)
         }
     });
-    populateSelect2('tenants', '#customer');
     populateSelect2('infrastructure/network/service', '#service');
     populateSelect2('infrastructure/network/device', '#device');
 
