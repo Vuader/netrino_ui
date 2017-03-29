@@ -3,15 +3,15 @@ from __future__ import unicode_literals
 
 import logging
 
-import nfw
-
-from netrino.common import model as common
+from tachyonic.neutrino.web.bootstrap3.forms import Form as Bootstrap
+from tachyonic.netrino_common import model as common
 
 log = logging.getLogger(__name__)
 
 
-class IGroup(nfw.bootstrap3.Form, common.IGroup):
+class IGroup(Bootstrap, common.IGroup):
     pass
 
-class NetworkService(nfw.bootstrap3.Form, common.NetworkService):
+
+class NetworkService(Bootstrap, common.NetworkService):
     pass

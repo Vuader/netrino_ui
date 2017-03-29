@@ -17,6 +17,11 @@
 
 <div class="col-md-2"><b>Status:</b></div><div class="col-md-10">{{ status }}</div>
 
+{% if activate_url %}
+<div class="col-md-10 col-md-offset-2"><button class="btn btn-primary" data-url="{{ activate_url }}">Activate</button></div>
+{% elif deactivate_url %}
+<div class="col-md-10 col-md-offset-2"><button class="btn btn-danger" data-url="{{ deactivate_url }}">Deactivate</button></div>{% endif %}
+
 <div class="col-md-12"><b>Result log:</b></div>
 <div class="row">
   <div class="col-md-8 col-md-offset-2"><pre>{{ result }}</pre></div>
