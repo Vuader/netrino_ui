@@ -7,15 +7,23 @@
     <div class="form-group">
       <label for="igroup">Interface Group:</label>
       <select id="igroup" name="interface_group" class="form-control" {% if view %}disabled{% else %}required{% endif %}>
-      {#{% for igid,name in igroups.iteritems() %}
-        <option value={{ igid }} {% if interfaceGroup  == igid %}selected="selected"{% endif %}>{{ name|e }}</option>
-      {% endfor %}#}
+        <option value="">
+          {% if view %}
+            {{ interfaceGroup }}
+          {% else %}
+          Select Interface Group
+          {% endif %}
+        </option>
       </select>
 
     </div>
     <div class="form-group">
       <label for="userrole">User Role:</label>
-      <input type="text" class="form-control" id="user_role" name="user_role" value="{{ userRole }}" {% if view %}readonly{% else %}required{% endif %}>
+      <select id="user_role" class="form-control" name="user_role" {% if view %}disabled{% else %}required{% endif %}>
+        <option value="">
+            Select User Role
+        </option>
+      </select>
     </div>
     <div class="form-group">
       <label for="ip">Config:</label>
@@ -28,28 +36,40 @@
     <div class="form-group">
       <label for="ip">Deactivation config:</label>
       <textarea rows="15" class="form-control" id="deactivate_snippet" name="deactivate_snippet"{% if view %}readonly{% endif %}>{{ deactivate|e if deactivate != None }}</textarea>
-    </div><!--
-    {% if view %}
-    <a class="btn btn-warning" href="../edit/{{ serviceID }}" role="button">Edit</a>
-    <a class="btn btn-danger" href="../rm/{{ serviceID }}" role="button">Delete</a>
-    <button class="btn btn-default" onclick="ajax_query('#window_content','/ui/infrastructure/network/service');">Cancel</button>
-    {% else %}
-    <button type="submit" class="btn btn-primary">Submit</button>
-    <button class="btn btn-default" onclick="ajax_query('#window_content','/ui/infrastructure/network/service');">Cancel</button>
-    {% endif %}
-  </form>-->
+    </div>
 </div>
 
 <script>
-    var element = $('#igroup').select2({
-      placeholder: 'Select an option'
-    });
-    $.getJSON( '/ui/infrastructure/network/igroup/view', { view: 'select2' } ).then( function( data ) {
-      for (var d = 0; d < data.length; d++) {
-              var item = data[d];
-              var option = new Option(item.text, item.id);
-              element.append(option);
+  function populateSelect2(path, element) {
+      var s2element = $(element).select2();
+      $.ajax({
+        url: '{{app}}/' + path,
+        type: 'GET',
+        dataType: 'json',
+        success: function( data ) {
+          for (var d = 0; d < data.length; d++) {
+                var item = data[d];
+                if (item.id == "{{userRole}}" || item.id == "{{interfaceGroup}}") {
+                  var option = new Option(item.text, item.id, true, true);
+                }
+                else{
+                  var option = new Option(item.text, item.id, true, false);
+                }
+                s2element.append(option);
+          }
+          s2element.trigger('change');
+        },
+        beforeSend: setHeader
+      });
+      function setHeader(xhr) {
+        xhr.setRequestHeader('X-Format', 'select2');
       }
-      element.trigger('change');
-    });
+  }
+</script>
+
+<script>
+  $(document).ready(function(){
+    populateSelect2('infrastructure/network/igroups/view', '#igroup');
+    populateSelect2('roles', '#user_role');
+  });
 </script>
