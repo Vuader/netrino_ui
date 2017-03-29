@@ -28,9 +28,9 @@ class InterfaceGroups(object):
                        self.create, 'network:admin')
         app.router.add(const.HTTP_POST, '/infrastructure/network/igroup/create',
                        self.create, 'network:admin')
-        app.router.add(const.HTTP_GET, '/infrastructure/network/igroup',
+        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups',
                        self.get, 'network:admin')
-        app.router.add(const.HTTP_GET, '/infrastructure/network/igroup/view',
+        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/view',
                        self.getjson, 'network:admin')
         app.router.add(const.HTTP_GET, '/infrastructure/network/igroup/view/{id}',
                        self.get, 'network:admin')

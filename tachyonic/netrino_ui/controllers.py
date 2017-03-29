@@ -121,6 +121,7 @@ def viewService(req, resp, id=None):
         renderValues['snippet'] = service['config_snippet']
         renderValues['activate'] = service['activate_snippet']
         renderValues['deactivate'] = service['deactivate_snippet']
+        renderValues['app'] = req.get_app()
         form = t.render(**renderValues)
         title = service['name']
         ui.view(req, resp, id=id, content=form, title=title)
@@ -147,25 +148,18 @@ def viewService(req, resp, id=None):
             ui.view(req, resp, content=dt, title=title)
 
 
-def editService(req, resp, id, **kwargs):
+def editService(req, resp, id):
     if req.method == const.HTTP_POST:
-        try:
-            api = getAPI(req)
-            values = req.post
-            snippet = values.get('config_snippet', '')
-            activate_snippet = values.get('activate_snippet', None)
-            deactivate_snippet = values.get('deactivate_snippet', None)
-            fields = getFields(snippet, activate_snippet, deactivate_snippet)
-            form = model.NetworkService(req.post, validate=True)
-            form['fields'] = fields
-            headers, response = api.execute(
-                const.HTTP_PUT, "/infrastructure/network/services/%s" % (id,), form)
-            if 'id' in response:
-                id = response['id']
-                viewService(req, resp, id=id)
-        except exceptions.HTTPBadRequest as e:
-            req.method = const.HTTP_GET
-            editService(req, resp, error=[e])
+        api = getAPI(req)
+        values = req.post
+        snippet = values.get('config_snippet', '')
+        activate_snippet = values.get('activate_snippet', None)
+        deactivate_snippet = values.get('deactivate_snippet', None)
+        fields = getFields(snippet, activate_snippet, deactivate_snippet)
+        form = model.NetworkService(req.post, validate=True)
+        form['fields'] = fields
+        headers, response = api.execute(
+            const.HTTP_PUT, "/infrastructure/network/services/%s" % (id,), form)
     else:
         api = getAPI(req)
         headers, service = api.execute(
@@ -180,9 +174,10 @@ def editService(req, resp, id, **kwargs):
         renderValues['snippet'] = service['config_snippet']
         renderValues['activate'] = service['activate_snippet']
         renderValues['deactivate'] = service['deactivate_snippet']
+        renderValues['app'] = req.get_app()
         form = t.render(**renderValues)
         title = service['name']
-        ui.edit(req, resp, id=id, content=form, title=title, **kwargs)
+        ui.edit(req, resp, id=id, content=form, title=title)
 
 
 def createService(req, resp, **kwargs):
@@ -213,6 +208,7 @@ def createService(req, resp, **kwargs):
             renderValues['snippet'] = req.post.get('config_snippet')
             renderValues['activate'] = req.post.get('activate_snippet')
             renderValues['deactivate'] = req.post.get('deactivate_snippet')
+        renderValues['app'] = req.get_app()
         templateFile = 'tachyonic.netrino_ui/service/createservice.html'
         t = jinja.get_template(templateFile)
         form = t.render(**renderValues)
