@@ -17,28 +17,28 @@ from ..controllers import createIGroup, viewIGroup, editIGroup, deleteIGroup, ge
 log = logging.getLogger(__name__)
 
 menu.admin.add('/Infrastructure/Network/Interface Groups',
-               '/infrastructure/network/igroup', 'network:admin')
+               '/infrastructure/network/igroups', 'network:admin')
 
 
 @app.resources()
 class InterfaceGroups(object):
 
     def __init__(self):
-        app.router.add(const.HTTP_GET, '/infrastructure/network/igroup/create',
+        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/create',
                        self.create, 'network:admin')
-        app.router.add(const.HTTP_POST, '/infrastructure/network/igroup/create',
+        app.router.add(const.HTTP_POST, '/infrastructure/network/igroups/create',
                        self.create, 'network:admin')
         app.router.add(const.HTTP_GET, '/infrastructure/network/igroups',
                        self.get, 'network:admin')
         app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/view',
                        self.getjson, 'network:admin')
-        app.router.add(const.HTTP_GET, '/infrastructure/network/igroup/view/{id}',
+        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/view/{id}',
                        self.get, 'network:admin')
-        app.router.add(const.HTTP_GET, '/infrastructure/network/igroup/edit/{id}',
+        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/edit/{id}',
                        self.edit, 'network:admin')
-        app.router.add(const.HTTP_POST, '/infrastructure/network/igroup/edit/{id}',
+        app.router.add(const.HTTP_POST, '/infrastructure/network/igroups/edit/{id}',
                        self.edit, 'network:admin')
-        app.router.add(const.HTTP_GET, '/infrastructure/network/igroup/delete/{id}',
+        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/delete/{id}',
                        self.delete, 'network:admin')
 
     def create(self, req, resp):

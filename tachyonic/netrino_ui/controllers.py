@@ -46,7 +46,7 @@ def viewIGroup(req, resp, id=None):
     if id:
         api = getAPI(req)
         headers, response = api.execute(
-            const.HTTP_GET, "/infrastructure/network/igroups/%s" % (id,))
+            const.HTTP_GET, "/infrastructure/network/igroup/%s" % (id,))
         form = model.IGroup(response, validate=False, readonly=True)
         ui.view(req, resp, content=form, id=id, title='View Interface Group')
     else:
@@ -63,12 +63,12 @@ def editIGroup(req, resp, id):
     if req.method == const.HTTP_POST:
         form = model.IGroup(req.post, validate=True, readonly=True)
         api = getAPI(req)
-        headers, response = api.execute(const.HTTP_PUT, "/infrastructure/network/igroups/%s" %
+        headers, response = api.execute(const.HTTP_PUT, "/infrastructure/network/igroup/%s" %
                                         (id,), form)
     else:
         api = getAPI(req)
         headers, response = api.execute(
-            const.HTTP_GET, "/infrastructure/network/igroups/%s" % (id,))
+            const.HTTP_GET, "/infrastructure/network/igroup/%s" % (id,))
         form = model.IGroup(response, validate=False)
         ui.edit(req, resp, content=form, id=id, title='Edit Interface Group')
 
@@ -95,7 +95,7 @@ def deleteIGroup(req, resp, id):
     try:
         api = getAPI(req)
         headers, response = api.execute(
-            const.HTTP_DELETE, "/infrastructure/network/igroups/%s" % (id,))
+            const.HTTP_DELETE, "/infrastructure/network/igroup/%s" % (id,))
         viewIGroup(req, resp)
     except exceptions.HTTPBadRequest as e:
         ui.edit(req, resp, content=form, id=id, title='Edit Interface Group')
@@ -299,7 +299,7 @@ def portsIGroup(req, resp, id, **kwargs):
     if req.method == const.HTTP_POST:
         igroup = req.post.get('interface_group')
         api = getAPI(req)
-        api_url = '/infrastructure/network/igroups/%s/port' % (igroup,)
+        api_url = '/infrastructure/network/igroup/%s/port' % (igroup,)
         data = {'device': id}
         ports = req.post.getlist('port')
         for port in ports:
