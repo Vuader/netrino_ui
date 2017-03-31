@@ -25,77 +25,102 @@
 </div>
 
 <script>
-function populateSelect2(path, element) {
-    var s2element = $(element).select2();
-    $.ajax({
-      url: '{{app}}/' + path,
-      type: 'GET',
-      dataType: 'json',
-      success: function( data ) {
-        for (var d = 0; d < data.length; d++) {
-              var item = data[d];
-              var option = new Option(item.text, item.id, true, false);
-              s2element.append(option);
-        }
-        if (element == '#interface') {
-          $(element).find('option').slice(1).attr('class', 'interface_option')
-        }
-        s2element.trigger('change');
-      },
-      beforeSend: setHeader      
-    });
-    function setHeader(xhr) {
-      xhr.setRequestHeader('X-Format', 'select2');
-    }
-}
-
-function additionalFields(service_id) {
-  $.ajax({
-      url: '{{app}}/infrastructure/network/service/view/' + service_id,
-      type: 'GET',
-      dataType: 'json',
-      beforeSend: setHeader,
-      success: function( data ) {
-        for (var d = 0; d < data.length; d++) {
-            if (data[d] != 'interface') {
-              var element = $(".additional-field").clone();
-              element.find('label').attr('for',data[d]);
-              element.find('label').text(data[d]);
-              element.find('input').attr('id',data[d]);
-              element.find('input').attr('name',data[d]);
-              element.find('input').attr('required','required');
-              element.css('display','');
-              element.removeClass('additional-field')
-              element.addClass('added-field')
-              element.insertAfter('.additional-field')
-            }
-        }
-      }
-    });
-    function setHeader(xhr) {
-      xhr.setRequestHeader('X-Format', 'fields');
-    }
-}
-
-</script>
-<script>
 $(document).ready(function(){
+
+    var igroup;
+    var dselect = $('#device').val();
+    var sselect = $('#service').val();
+
+
+    function populateSelect2(path, element) {
+        var s2element = $(element).select2();
+        $.ajax({
+          url: '{{app}}/' + path,
+          type: 'GET',
+          dataType: 'json',
+          success: function( data ) {
+            for (var d = 0; d < data.length; d++) {
+                  var item = data[d];
+                  var option = new Option(item.text, item.id, true, false);
+                  s2element.append(option);
+            }
+            if (element == '#interface') {
+              if (data.length == 0) {
+                // var option = new Option('No Interfaces available for this Service', '', false, false);
+                var option = document.createElement("OPTION");
+                option.text = 'No Interfaces available for this Service';
+                option.disabled = true;
+                option.selected = true;
+                s2element.append(option);
+              }
+              $(element).find('option').slice(1).attr('class', 'interface_option')
+            }
+            s2element.trigger('change');
+          },
+          beforeSend: setHeader
+        });
+        function setHeader(xhr) {
+          xhr.setRequestHeader('X-Format', 'select2');
+        }
+    }
+
+    function getFieldsIGroup() {
+      function setHeader(xhr) {
+          xhr.setRequestHeader('X-Format', 'fields+igroup');
+      }
+      $.ajax({
+          url: '{{app}}/infrastructure/network/service/view/' + sselect,
+          type: 'GET',
+          dataType: 'json',
+          beforeSend: setHeader,
+          success: processFieldsIGroup
+      });
+    }
+
+    function processFieldsIGroup(data) {
+          igroup = data.igroup
+          var fields = data.fields
+          for (var d = 0; d < fields.length; d++) {
+              if (fields[d] != 'interface') {
+                var element = $(".additional-field").clone();
+                element.find('label').attr('for',fields[d]);
+                element.find('label').text(fields[d]);
+                element.find('input').attr('id',fields[d]);
+                element.find('input').attr('name',fields[d]);
+                element.find('input').attr('required','required');
+                element.css('display','');
+                element.removeClass('additional-field')
+                element.addClass('added-field')
+                element.insertAfter('.additional-field')
+              }
+          };
+          if (dselect != '') {
+            populateSelect2('infrastructure/network/device/' + dselect + '/ports?igroup='+igroup, '#interface');
+          }
+    }
+
     $("#device").change(function () {
-        var dselect = $('#device').val();
+        dselect = $('#device').val();
+        sselect = $('#service').val();
         if (dselect == '' || dselect.toString().includes(',')) {
           $("#port").css('display','none');
         }
         else {
-          $("#port").css('display','');
-          $('option').remove('.interface_option');
-          populateSelect2('infrastructure/network/device/' + dselect + '/ports', '#interface');
+          if (sselect != '') {
+            $("#port").css('display','');
+            $('option').remove('.interface_option');
+            populateSelect2('infrastructure/network/device/' + dselect + '/ports?igroup='+igroup, '#interface');
+          }
         }
     });
     $("#service").change(function () {
         $('.added-field').remove();
-        var service_id = $('#service').val();
-        if (service_id != '' ) {
-          additionalFields(service_id)
+        igroup = undefined;
+        sselect = $('#service').val();
+        dselect = $('#device').val();
+        $('option').remove('.interface_option');
+        if (sselect != '') {
+          getFieldsIGroup()
         }
     });
     populateSelect2('infrastructure/network/service', '#service');
