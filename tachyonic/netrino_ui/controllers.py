@@ -110,6 +110,11 @@ def viewService(req, resp, id=None):
         if return_format == "fields":
             fields = service['fields'].split(',')
             return json.dumps(fields, indent=4)
+        elif return_format == "fields+igroup":
+            res = {}
+            res['fields'] = service['fields'].split(',')
+            res['igroup'] = service['interface_group']
+            return json.dumps(res, indent=4)
         templateFile = 'tachyonic.netrino_ui/service/createservice.html'
         t = jinja.get_template(templateFile)
         renderValues = {}
@@ -242,13 +247,13 @@ def viewDevice(req, resp, id=None, **kwargs):
         fields['present'] = 'Present'
         fields['customername'] = 'Customer'
         fields['service'] = 'Service'
-        apiurl = "/infrastructure/network/devices/" + id + "/ports"
+        apiurl = "/infrastructure/network/device/" + id + "/ports"
         dt = datatable(req, 'devices', apiurl, fields, endpoint="netrino_api")
         edit_url = "/ui/infrastructure/network/device/edit/" + id
         back_url = "/ui/infrastructure/network/device/"
         api = getAPI(req)
         response_headers, device = api.execute(
-            const.HTTP_GET, "/infrastructure/network/devices/" + id)
+            const.HTTP_GET, "/infrastructure/network/device/" + id)
         renderValues['title'] = device['name']
         #
         # Perhaps in the future we can have this Refresh button here
@@ -307,11 +312,11 @@ def portsIGroup(req, resp, id, **kwargs):
             response_headers, result = api.execute(
                 const.HTTP_PUT, api_url, obj=data)
     else:
-        back_url = 'infrastructure/network/devices/" + id + "/ports"'
+        back_url = 'infrastructure/network/device/" + id + "/ports"'
         fields = OrderedDict()
         fields['port'] = 'Interface'
         fields['igroupname'] = 'Interface Group'
-        apiurl = "infrastructure/network/devices/" + id + "/ports"
+        apiurl = "infrastructure/network/device/" + id + "/ports"
         app = req.get_app()
         dt = datatable(req, 'devices', apiurl, fields,
                        checkbox=True, endpoint="netrino_api",
@@ -357,7 +362,7 @@ def editDevice(req, resp, id):
 
     api = getAPI(req)
     response_headers, device = api.execute(
-        const.HTTP_GET, "/infrastructure/network/devices/" + id)
+        const.HTTP_GET, "/infrastructure/network/device/" + id)
     if device['id']:
         renderValues['device_ip'] = dec2ip(int(id), 4)
         renderValues['id'] = id
@@ -400,26 +405,21 @@ def createDevicePost(req, resp):
         ip = ip.ip_network
         data['id'] = ip2dec(ip, 4)
         response_headers, result = api.execute(
-            const.HTTP_POST, "/infrastructure/network/devices", obj=data)
+            const.HTTP_POST, "/infrastructure/network/device", obj=data)
         results.append(result)
     return results
-
-#
-# To Handle the POST of edit device:
-# Nog besig met die
-#
 
 
 def updateDevice(req, id):
     api = getAPI(req)
     response_headers, device = api.execute(
-        const.HTTP_PUT, "/infrastructure/network/devices/" + id)
+        const.HTTP_PUT, "/infrastructure/network/device/" + id)
 
 
 def confirmRMdevice(req, resp, id):
     api = getAPI(req)
     response_headers, device = api.execute(
-        const.HTTP_GET, "/infrastructure/network/devices/" + id)
+        const.HTTP_GET, "/infrastructure/network/device/" + id)
     if not 'id' in device:
         raise exceptions.HTTPBadRequest(title="Not Found",
                                         description="Device not found: %s" % id)
@@ -443,14 +443,19 @@ def confirmRMdevice(req, resp, id):
 def deleteDevice(req, id):
     api = getAPI(req)
     response_headers, result = api.execute(
-        const.HTTP_DELETE, "/infrastructure/network/devices/" + id)
+        const.HTTP_DELETE, "/infrastructure/network/device/" + id)
     return result
 
 
 def getPorts(req, id):
     api = getAPI(req)
+    apiurl = "/infrastructure/network/device/%s/ports" % (id,)
+    igroup = req.post.get('igroup')
+    log.debug("MYDEBUG %s" % (igroup,))
+    if igroup:
+        apiurl += '?igroup=%s' % (igroup,)
     response_headers, response = api.execute(
-        const.HTTP_GET, "/infrastructure/network/devices/%s/ports" % (id,))
+        const.HTTP_GET, apiurl)
     return_format = req.headers.get('X-Format')
     if return_format == "select2":
         result = []
