@@ -451,7 +451,6 @@ def getPorts(req, id):
     api = getAPI(req)
     apiurl = "/infrastructure/network/device/%s/ports" % (id,)
     igroup = req.post.get('igroup')
-    log.debug("MYDEBUG %s" % (igroup,))
     if igroup:
         apiurl += '?igroup=%s' % (igroup,)
     response_headers, response = api.execute(
