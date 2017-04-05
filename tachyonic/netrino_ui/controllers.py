@@ -84,8 +84,8 @@ def createIGroup(req, resp):
                 id = response['id']
                 viewIGroup(req, resp, id=id)
         except exceptions.HTTPBadRequest as e:
-            form = model.User(req, validate=False)
-            ui.create(req, resp, content=form, title='Create User', error=[e])
+            form = model.IGroup(req.post, validate=False)
+            ui.create(req, resp, content=form, title='Create Interface Group', error=[e])
     else:
         form = model.IGroup(req.post, validate=False)
         ui.create(req, resp, content=form, title='Create Interface Group')
