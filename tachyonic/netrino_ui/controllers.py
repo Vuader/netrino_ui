@@ -394,20 +394,20 @@ def createDevicePost(req, resp):
     issubnet = re.search('/', subnet)
     if not issubnet:
         subnet += "/32"
-        try:
-            subnet = IPNetwork(subnet)
-        except:
-            raise exceptions.HTTPBadRequest(
-                title="Failure", description="Invalid IP address")
-    results = []
-    for ip in subnet:
-        ver = ip._version
-        ip = ip.ip_network
-        data['id'] = ip2dec(ip, 4)
-        response_headers, result = api.execute(
-            const.HTTP_POST, "/infrastructure/network/device", obj=data)
-        results.append(result)
-    return results
+    try:
+        subnet = IPNetwork(subnet)
+        results = []
+        for ip in subnet:
+            ver = ip._version
+            ip = ip.ip_network
+            data['id'] = ip2dec(ip, 4)
+            response_headers, result = api.execute(
+                const.HTTP_POST, "/infrastructure/network/device", obj=data)
+            results.append(result)
+        return results
+    except:
+        raise exceptions.HTTPBadRequest(
+            title="Failure", description="Invalid IP address")
 
 
 def updateDevice(req, id):
