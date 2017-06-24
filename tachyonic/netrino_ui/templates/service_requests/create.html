@@ -94,7 +94,7 @@ $(document).ready(function(){
               }
           };
           if (dselect != '') {
-            populateSelect2('infrastructure/network/device/' + dselect + '/ports?igroup='+igroup, '#interface');
+            populateSelect2('infrastructure/network/device/' + dselect + '/ports?igroup='+igroup+',notinuse=yes', '#interface');
           }
     }
 
