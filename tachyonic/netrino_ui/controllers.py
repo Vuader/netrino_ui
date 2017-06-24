@@ -335,6 +335,7 @@ def portsIGroup(req, resp, id, **kwargs):
         kwargs['content'] = content
         kwargs['back_url'] = back_url
         kwargs['window'] = '#window_content'
+        kwargs['title'] = 'Assign Interface Groups'
         t = jinja.get_template('tachyonic.ui/view.html')
         resp.body = t.render(**kwargs)
 
