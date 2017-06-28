@@ -49,9 +49,9 @@ class NetworkDevice(object):
         app.router.add(const.HTTP_POST, '/infrastructure/network/device/edit/{id}',
                        self.edit, 'network:admin')
         app.router.add(const.HTTP_GET, '/infrastructure/network/device/delete/{id}',
-                       self.delete)
+                       self.delete, 'network:admin')
         app.router.add(const.HTTP_POST, '/infrastructure/network/device/delete/{id}',
-                       self.delete)
+                       self.delete, 'network:admin')
 
     def get(self, req, resp, id=None):
         return viewDevice(req, resp, id)
@@ -78,8 +78,5 @@ class NetworkDevice(object):
             viewDevice(req, resp, id=id, errors=result)
 
     def delete(self, req, resp, id):
-        if req.method == 'GET':
-            confirmRMdevice(req, resp, id=id)
-        elif req.method == 'POST':
-            result = deleteDevice(req, id)
-            viewDevice(req, resp, errors=result)
+        result = deleteDevice(req, id)
+        viewDevice(req, resp, errors=result)

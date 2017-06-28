@@ -377,6 +377,7 @@ def editDevice(req, resp, id):
             'delete_url'] = 'infrastructure/network/device/delete/' + id
         renderValues['formid'] = 'device'
         renderValues['resource'] = 'Device'
+        renderValues['confirm'] = confirmRMdevice(req, id)
     else:
         raise exceptions.HTTPBadRequest("Device not found")  # Device not found
 
@@ -417,10 +418,10 @@ def updateDevice(req, id):
         const.HTTP_PUT, "/infrastructure/network/device/" + id)
 
 
-def confirmRMdevice(req, resp, id):
-    api = getAPI(req)
+def confirmRMdevice(req, id):
+    api = RestClient(req.context['restapi'])
     response_headers, device = api.execute(
-        const.HTTP_GET, "/infrastructure/network/device/" + id)
+        const.HTTP_GET, "/infrastructure/network/device/" + id, endpoint='netrino_api')
     if not 'id' in device:
         raise exceptions.HTTPBadRequest(title="Not Found",
                                         description="Device not found: %s" % id)
@@ -428,17 +429,18 @@ def confirmRMdevice(req, resp, id):
     request_headers['X-Search-Specific'] = 'device=' + \
         id + ',status=ACTIVE'
     response_headers, result = api.execute(
-        const.HTTP_GET, "/infrastructure/network/service_requests/", headers=request_headers)
+        const.HTTP_GET, "/infrastructure/network/service_requests/", headers=request_headers, endpoint='netrino_api')
     num_serv = len(result)
     templateFile = 'tachyonic.netrino_ui/device/rmdevice.html'
-    renderValues = {'title': "Remove " + device['name']}
+    renderValues = {'device_id': id}
     if num_serv > 0:
-        warn = (dec2ip(int(id), 4), str(num_serv))
+        #warn = (dec2ip(int(id), 4), str(num_serv))
+        warn = (str(id), str(num_serv))
         renderValues['warn'] = warn
-    renderValues['device_id'] = id
+
     t = jinja.get_template(templateFile)
-    form = t.render(**renderValues)
-    ui.edit(req, resp, content=form, id=id, **renderValues)
+    warn_msg = t.render(**renderValues)
+    return warn_msg
 
 
 def deleteDevice(req, id):
@@ -537,9 +539,10 @@ def viewSR(req, resp, id=None, **kwargs):
         fields['device'] = 'Device'
         fields['service'] = 'Service'
         fields['status'] = 'Status'
+        search = req.post.get('search','')
         content = datatable(
             req, 'service_requests', '/infrastructure/network/service_requests',
-            fields, view_button=True, endpoint="netrino_api")
+            fields, view_button=True, search=search, endpoint="netrino_api")
         renderValues['title'] = "Service Requests"
 
     ui.view(req, resp, content=content, **renderValues)
