@@ -112,7 +112,10 @@ def viewService(req, resp, id=None):
             return json.dumps(fields, indent=4)
         elif return_format == "fields+igroup":
             res = {}
-            res['fields'] = service['fields'].split(',')
+            if 'fields' in res:
+                res['fields'] = service['fields'].split(',')
+            else:
+                res['fields'] = None
             res['igroup'] = service['interface_group']
             return json.dumps(res, indent=4)
         templateFile = 'tachyonic.netrino_ui/service/createservice.html'
@@ -274,7 +277,7 @@ def viewDevice(req, resp, id=None, **kwargs):
         renderValues['create_url'] = ''
         dt = description + dt
         dt += ('<button class="btn btn-primary" ' +
-               'data-url="infrastructure/network/device/' +
+               'data-url="%s/infrastructure/network/device/' % (req.get_app(),) +
                id + '/ports/igroup">' +
                'Assign Interface Groups</button><hr>')
     else:
