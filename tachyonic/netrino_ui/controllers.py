@@ -542,7 +542,8 @@ def viewSR(req, resp, id=None, **kwargs):
         search = req.post.get('search','')
         content = datatable(
             req, 'service_requests', '/infrastructure/network/service_requests',
-            fields, view_button=True, search=search, endpoint="netrino_api")
+            fields, view_button=True, search=search, sort=[0, 'desc'],
+            endpoint="netrino_api")
         renderValues['title'] = "Service Requests"
 
     ui.view(req, resp, content=content, **renderValues)
