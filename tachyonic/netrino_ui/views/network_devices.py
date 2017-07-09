@@ -4,11 +4,7 @@ from __future__ import unicode_literals
 import logging
 
 from tachyonic import app
-from tachyonic import router
 from tachyonic.neutrino import constants as const
-from tachyonic.neutrino import exceptions
-from tachyonic.client import Client
-
 from tachyonic.ui import menu
 from ..controllers import viewDevice
 from ..controllers import createDevice
@@ -16,7 +12,6 @@ from ..controllers import createDevicePost
 from ..controllers import getPorts
 from ..controllers import portsIGroup
 from ..controllers import editDevice
-from ..controllers import confirmRMdevice
 from ..controllers import deleteDevice
 from ..controllers import updateDevice
 
