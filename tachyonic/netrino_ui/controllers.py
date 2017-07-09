@@ -252,8 +252,8 @@ def viewDevice(req, resp, id=None, **kwargs):
         fields['service'] = 'Service'
         apiurl = "/infrastructure/network/device/" + id + "/ports"
         dt = datatable(req, 'devices', apiurl, fields, endpoint="netrino_api")
-        edit_url = "/ui/infrastructure/network/device/edit/" + id
-        back_url = "/ui/infrastructure/network/device/"
+        edit_url = "infrastructure/network/device/edit/" + id
+        back_url = "infrastructure/network/device/"
         api = getAPI(req)
         response_headers, device = api.execute(
             const.HTTP_GET, "/infrastructure/network/device/" + id)
@@ -324,7 +324,7 @@ def portsIGroup(req, resp, id, **kwargs):
         dt = datatable(req, 'devices', apiurl, fields,
                        checkbox=True, endpoint="netrino_api",
                        id_field=0)
-        back_url = "/ui/infrastructure/network/device/view/%s" % (id,)
+        back_url = "infrastructure/network/device/view/%s" % (id,)
         renderValues = {}
         renderValues['dt'] = dt
         renderValues['app'] = app
