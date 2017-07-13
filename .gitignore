@@ -41,3 +41,7 @@ pip-log.txt
 .DS_Store
 
 .idea/
+
+## Sphinx
+_build
+_build_html
