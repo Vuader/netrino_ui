@@ -112,7 +112,7 @@ def viewService(req, resp, id=None):
             return json.dumps(fields, indent=4)
         elif return_format == "fields+igroup":
             res = {}
-            if 'fields' in res:
+            if 'fields' in service:
                 res['fields'] = service['fields'].split(',')
             else:
                 res['fields'] = None
