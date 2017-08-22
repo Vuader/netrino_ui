@@ -5,9 +5,9 @@ Netrino UI User Guide
    :maxdepth: 2
    :caption: Contents:
 
-   Tenants <http://tachyonic-ui.readthedocs.io/>
-   Domains <http://tachyonic-ui.readthedocs.io/>
-   Roles <http://tachyonic-ui.readthedocs.io/>
+   Tenants <tachyonic-ui.html#http://>
+   Domains <tachyonic-ui.html#http://>
+   Roles <tachyonic-ui.html#http://>
    users
    devices
    interfacegroups
