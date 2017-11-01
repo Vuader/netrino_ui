@@ -10,7 +10,7 @@ from tachyonic.neutrino import exceptions
 from tachyonic.client import Client
 
 from tachyonic.ui import menu
-from ..controllers import createSR, viewSR, activateSR, deactivateSR
+from ..controllers import createSR, viewSR, activateSR, deactivateSR, deleteSR
 
 
 log = logging.getLogger(__name__)
@@ -37,6 +37,8 @@ class ServiceRequest(object):
                    self.activate, 'network:admin')
         router.add(const.HTTP_GET, '/infrastructure/network/sr/edit/{id}/deactivate',
                    self.deactivate, 'network:admin')
+        router.add(const.HTTP_GET, '/infrastructure/network/sr/delete/{id}',
+                   self.delete, 'network:admin')
 
     def create(self, req, resp):
         createSR(req, resp)
@@ -52,3 +54,13 @@ class ServiceRequest(object):
 
     def deactivate(self, req, resp, id):
         deactivateSR(req, resp, id=id)
+
+    def delete(self, req, resp, id):
+        """
+        Typically one does not want to delete
+        Service requests, for historical purposes.
+        Deletion of a Service request should
+        only be nessecary to cleanup after tests like
+        unit tests are run
+        """
+        deleteSR(req, resp, id=id)

@@ -24,21 +24,21 @@ menu.admin.add('/Infrastructure/Network/Interface Groups',
 class InterfaceGroups(object):
 
     def __init__(self):
-        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/create',
+        router.add(const.HTTP_GET, '/infrastructure/network/igroups/create',
                        self.create, 'network:admin')
-        app.router.add(const.HTTP_POST, '/infrastructure/network/igroups/create',
+        router.add(const.HTTP_POST, '/infrastructure/network/igroups/create',
                        self.create, 'network:admin')
-        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups',
+        router.add(const.HTTP_GET, '/infrastructure/network/igroups',
                        self.get, 'network:admin')
-        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/view',
+        router.add(const.HTTP_GET, '/infrastructure/network/igroups/view',
                        self.getjson, 'network:admin')
-        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/view/{id}',
+        router.add(const.HTTP_GET, '/infrastructure/network/igroups/view/{id}',
                        self.get, 'network:admin')
-        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/edit/{id}',
+        router.add(const.HTTP_GET, '/infrastructure/network/igroups/edit/{id}',
                        self.edit, 'network:admin')
-        app.router.add(const.HTTP_POST, '/infrastructure/network/igroups/edit/{id}',
+        router.add(const.HTTP_POST, '/infrastructure/network/igroups/edit/{id}',
                        self.edit, 'network:admin')
-        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/delete/{id}',
+        router.add(const.HTTP_GET, '/infrastructure/network/igroups/delete/{id}',
                        self.delete, 'network:admin')
 
     def create(self, req, resp):

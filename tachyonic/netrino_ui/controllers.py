@@ -253,7 +253,7 @@ def viewDevice(req, resp, id=None, **kwargs):
         apiurl = "/infrastructure/network/device/" + id + "/ports"
         dt = datatable(req, 'devices', apiurl, fields, endpoint="netrino_api")
         edit_url = "infrastructure/network/device/edit/" + id
-        back_url = "infrastructure/network/device/"
+        back_url = "infrastructure/network/device"
         api = getAPI(req)
         response_headers, device = api.execute(
             const.HTTP_GET, "/infrastructure/network/device/" + id)
@@ -396,23 +396,30 @@ def createDevicePost(req, resp):
     values = req.post
     subnet = values.get('device_ip')
     data = {'snmp_comm': values.get('snmp_community')}
+    unittest = values.get('unittest', False)
+    if unittest:
+        data['unittest'] = True
     issubnet = re.search('/', subnet)
     if not issubnet:
         subnet += "/32"
+    results = []
     try:
         subnet = IPNetwork(subnet)
-        results = []
-        for ip in subnet:
-            ver = ip._version
-            ip = ip.ip_network
-            data['id'] = ip2dec(ip, 4)
-            response_headers, result = api.execute(
-                const.HTTP_POST, "/infrastructure/network/device", obj=data)
-            results.append(result)
-        return results
     except:
         raise exceptions.HTTPBadRequest(
             title="Failure", description="Invalid IP address")
+    for ip in subnet:
+        try:
+            ver = ip._version
+            ip = ip._network
+            data['id'] = ip #ip2dec(ip, ver)
+            response_headers, result = api.execute(
+                const.HTTP_POST, "/infrastructure/network/device", obj=data)
+            results.append(result)
+        except:
+            raise exceptions.HTTPBadRequest(
+                title="Failure", description="Could not create device " + str(ip))
+    return results
 
 
 def updateDevice(req, id):
@@ -437,7 +444,6 @@ def confirmRMdevice(req, id):
     templateFile = 'tachyonic.netrino_ui/device/rmdevice.html'
     renderValues = {'device_id': id}
     if num_serv > 0:
-        #warn = (dec2ip(int(id), 4), str(num_serv))
         warn = (str(id), str(num_serv))
         renderValues['warn'] = warn
 
@@ -562,5 +568,18 @@ def activateSR(req, resp, id=id):
 def deactivateSR(req, resp, id=id):
     api = getAPI(req)
     headers, response = api.execute(
-        const.HTTP_DELETE, "/infrastructure/network/service_requests/%s" % (id,))
+        const.HTTP_PUT, "/infrastructure/network/service_requests/%s/deactivate" % (id,))
     viewSR(req, resp, id=id)
+
+def deleteSR(req, resp, id=id):
+    """
+    Function to delete a Service Request
+    :param req: Request object
+    :param resp: Response object
+    :param id: ID of the Service request to be deleted
+    :return:
+    """
+    api = getAPI(req)
+    headers, response = api.execute(
+        const.HTTP_DELETE, "/infrastructure/network/service_requests/%s" % (id,))
+    viewSR(req, resp)
