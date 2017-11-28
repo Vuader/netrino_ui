@@ -25,12 +25,12 @@ menu.admin.add('/Infrastructure/Network/Devices',
 class NetworkDevice(object):
 
     def __init__(self):
+        app.router.add(const.HTTP_GET, '/infrastructure/network/device',
+                       self.get, 'network:admin')
         app.router.add(const.HTTP_GET, '/infrastructure/network/device/create',
                        self.create, 'network:admin')
         app.router.add(const.HTTP_POST, '/infrastructure/network/device/create',
                        self.create, 'network:admin')
-        app.router.add(const.HTTP_GET, '/infrastructure/network/device',
-                       self.get, 'network:admin')
         app.router.add(const.HTTP_GET, '/infrastructure/network/device/{id}/ports',
                        self.getports, 'network:admin')
         app.router.add(const.HTTP_GET, '/infrastructure/network/device/{id}/ports/igroup',

@@ -3,7 +3,7 @@ import pytest
 import requests
 import re
 import json
-
+from functions import get_form_value
 parametrize = pytest.mark.parametrize
 
 app = 'http://localhost/ui'
@@ -55,7 +55,8 @@ class Netrino:
 
 @pytest.fixture
 def netrino():
-    """Returns a Netrino test object"""
+    """Returns a Netrino test object
+    """
     return Netrino()
 
 
@@ -73,10 +74,12 @@ def test_igroup(netrino, req, url, obj, test):
     if test == 'create':
         netrino.request(req, url, obj)
         assert netrino.response.status_code == 200
-        match = re.search('id="id" value="([^"]+).*value="unittest"', netrino.response.text)
+        id = get_form_value('id', netrino.response.text)
+        assert id is not None
+        match = re.search('"unittest"', netrino.response.text)
         assert match is not None
         global igroup_id
-        igroup_id = match.group(1)
+        igroup_id = id
     elif test == 'viewall':
         netrino.dt(req, url, search='unittest')
         assert netrino.response.status_code == 200
@@ -166,7 +169,7 @@ def test_device(netrino, req, url, obj, test):
     if test == 'create':
         netrino.request(req, url, obj)
         assert netrino.response.status_code == 200
-        assert '/ui/dt?api=/infrastructure/network/devices' in netrino.response.text
+        assert '/ui/dt/?api=/infrastructure/network/devices' in netrino.response.text
         # Creating a Device also creates a service request
         # so we are checking if that also succeeded
         netrino.dt('GET',
@@ -221,10 +224,11 @@ def test_create_tenant():
                          data=tenant_vals,
                          cookies={'tachyonic': cookie})
     assert r.status_code == 200
-    match = re.search('value="([^"]+)" id="id".*value="unittest"', r.text)
-    assert match is not None
     global tenant_id
-    tenant_id = match.group(1)
+    tenant_id = get_form_value('id', r.text)
+    assert tenant_id is not None
+    match = re.search('"unittest"', r.text)
+    assert match is not None
 
 
 def test_open_tenant():
@@ -260,7 +264,7 @@ def test_service_request(netrino, req, url, obj, test):
     if test == 'create':
         netrino.request(req, url, obj)
         assert netrino.response.status_code == 200
-        assert '/ui/dt?api=/infrastructure/network/service_requests' in netrino.response.text
+        assert '/ui/dt/?api=/infrastructure/network/service_requests' in netrino.response.text
     elif test == 'viewall':
         netrino.dt(req,
                    url,

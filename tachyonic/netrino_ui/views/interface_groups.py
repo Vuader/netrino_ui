@@ -5,11 +5,7 @@ import logging
 import json
 
 from tachyonic import app
-from tachyonic import router
 from tachyonic.neutrino import constants as const
-from tachyonic.neutrino import exceptions
-
-
 from tachyonic.ui import menu
 from ..controllers import createIGroup, viewIGroup, editIGroup, deleteIGroup, getAPI
 
@@ -24,28 +20,28 @@ menu.admin.add('/Infrastructure/Network/Interface Groups',
 class InterfaceGroups(object):
 
     def __init__(self):
-        router.add(const.HTTP_GET, '/infrastructure/network/igroups/create',
-                       self.create, 'network:admin')
-        router.add(const.HTTP_POST, '/infrastructure/network/igroups/create',
-                       self.create, 'network:admin')
-        router.add(const.HTTP_GET, '/infrastructure/network/igroups',
+        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups',
                        self.get, 'network:admin')
-        router.add(const.HTTP_GET, '/infrastructure/network/igroups/view',
+        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/create',
+                       self.create, 'network:admin')
+        app.router.add(const.HTTP_POST, '/infrastructure/network/igroups/create',
+                       self.create, 'network:admin')
+        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/view',
                        self.getjson, 'network:admin')
-        router.add(const.HTTP_GET, '/infrastructure/network/igroups/view/{id}',
+        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/view/{id}',
                        self.get, 'network:admin')
-        router.add(const.HTTP_GET, '/infrastructure/network/igroups/edit/{id}',
+        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/edit/{id}',
                        self.edit, 'network:admin')
-        router.add(const.HTTP_POST, '/infrastructure/network/igroups/edit/{id}',
+        app.router.add(const.HTTP_POST, '/infrastructure/network/igroups/edit/{id}',
                        self.edit, 'network:admin')
-        router.add(const.HTTP_GET, '/infrastructure/network/igroups/delete/{id}',
+        app.router.add(const.HTTP_GET, '/infrastructure/network/igroups/delete/{id}',
                        self.delete, 'network:admin')
 
     def create(self, req, resp):
         createIGroup(req, resp)
 
     def get(self, req, resp, id=None):
-        viewIGroup(req, resp, id=id)
+        return viewIGroup(req, resp, igid=id)
 
     def getjson(self, req, resp, id=None):
         api = getAPI(req)
@@ -54,7 +50,7 @@ class InterfaceGroups(object):
         return json.dumps(result, indent=4)
 
     def edit(self, req, resp, id):
-        editIGroup(req, resp, id=id)
+        editIGroup(req, resp, igid=id)
 
     def delete(self, req, resp, id):
-        deleteIGroup(req, resp, id=id)
+        deleteIGroup(req, resp, igid=id)

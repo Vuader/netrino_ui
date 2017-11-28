@@ -3,12 +3,9 @@ from __future__ import unicode_literals
 
 import logging
 
-from tachyonic import app
-from tachyonic import router
-from tachyonic.neutrino import constants as const
-from tachyonic.neutrino import exceptions
-from tachyonic.client import Client
 
+from tachyonic import app
+from tachyonic.neutrino import constants as const
 from tachyonic.ui import menu
 from ..controllers import viewService, createService, editService, deleteService
 
@@ -48,4 +45,4 @@ class Service(object):
         editService(req, resp, id)
 
     def delete(self, req, resp, id):
-        deleteService(req, resp, id=id)
+        deleteService(req, resp, sid=id)
