@@ -28,6 +28,7 @@
 $(document).ready(function(){
 
     var igroup;
+    var fields = [];
     var dselect = $('#device').val();
     var sselect = $('#service').val();
 
@@ -77,24 +78,38 @@ $(document).ready(function(){
     }
 
     function processFieldsIGroup(data) {
-          igroup = data.igroup
-          var fields = data.fields
-          for (var d = 0; d < fields.length; d++) {
-              if (fields[d] != 'interface') {
-                var element = $(".additional-field").clone();
-                element.find('label').attr('for',fields[d]);
-                element.find('label').text(fields[d]);
-                element.find('input').attr('id',fields[d]);
-                element.find('input').attr('name',fields[d]);
-                element.find('input').attr('required','required');
-                element.css('display','');
-                element.removeClass('additional-field')
-                element.addClass('added-field')
-                element.insertAfter('.additional-field')
-              }
-          };
-          if (dselect != '') {
-            populateSelect2('infrastructure/network/device/' + dselect + '/ports?igroup='+igroup+',notinuse=yes', '#interface');
+          igroup = data.igroup;
+          if ('fields' in data) {
+            fields = data.fields;
+            for (var d = 0; d < fields.length; d++) {
+                  if (fields[d] != 'interface') {
+                      var element = $(".additional-field").clone();
+                      element.find('label').attr('for',fields[d]);
+                      element.find('label').text(fields[d]);
+                      element.find('input').attr('id',fields[d]);
+                      element.find('input').attr('name',fields[d]);
+                      element.find('input').attr('required','required');
+                      element.css('display','');
+                      element.removeClass('additional-field');
+                      element.addClass('added-field');
+                      element.insertAfter('.additional-field')
+                  }
+            }
+            if ("interface" in fields) {
+                if (dselect != '') {
+                    populateSelect2('infrastructure/network/device/' + dselect + '/ports?igroup=' + igroup + ',notinuse=yes', '#interface');
+                    $("#port").css('display','');
+                    $("#interface").prop('required',true);
+                }
+            }
+            else {
+                $("#port").css('display','none');
+                $("#interface").prop('required',false);
+            }
+          }
+          else {
+              $("#port").css('display','none');
+              $("#interface").prop('required',false);
           }
     }
 
@@ -103,11 +118,13 @@ $(document).ready(function(){
         sselect = $('#service').val();
         if (dselect == '' || dselect.toString().includes(',')) {
           $("#port").css('display','none');
+          $("#interface").prop('required',false);
         }
         else {
-          if (sselect != '') {
+          if ((sselect != '') && ("interface" in fields)) {
             $("#port").css('display','');
             $('option').remove('.interface_option');
+            $("#interface").prop('required',true);
             populateSelect2('infrastructure/network/device/' + dselect + '/ports?igroup='+igroup, '#interface');
           }
         }
