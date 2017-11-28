@@ -1,12 +1,11 @@
 import re
-import sys
 import json
 from pyipcalc import *
 from collections import OrderedDict
 from tachyonic import jinja
 from tachyonic.neutrino import exceptions as exceptions
 from tachyonic.neutrino import constants as const
-from tachyonic.client import Client as RestClient
+from tachyonic.neutrino import Client as RestClient
 from tachyonic.ui.views import ui
 from tachyonic.ui.views.datatable import datatable
 from . import model
@@ -42,13 +41,13 @@ def getFields(snippet, activate_snippet, deactivate_snippet):
     return fields
 
 
-def viewIGroup(req, resp, id=None):
-    if id:
+def viewIGroup(req, resp, igid=None):
+    if igid:
         api = getAPI(req)
         headers, response = api.execute(
-            const.HTTP_GET, "/infrastructure/network/igroup/%s" % (id,))
+            const.HTTP_GET, "/infrastructure/network/igroup/%s" % (igid,))
         form = model.IGroup(response, validate=False, readonly=True)
-        ui.view(req, resp, content=form, id=id, title='View Interface Group')
+        ui.view(req, resp, content=form, id=igid, title='View Interface Group')
     else:
         title = 'Interface Groups'
         fields = OrderedDict()
@@ -59,12 +58,12 @@ def viewIGroup(req, resp, id=None):
         ui.view(req, resp, content=dt, title=title)
 
 
-def editIGroup(req, resp, id):
+def editIGroup(req, resp, igid):
     if req.method == const.HTTP_POST:
         form = model.IGroup(req.post, validate=True, readonly=True)
         api = getAPI(req)
-        headers, response = api.execute(const.HTTP_PUT, "/infrastructure/network/igroup/%s" %
-                                        (id,), form)
+        api.execute(const.HTTP_PUT, "/infrastructure/network/igroup/%s" %
+                    (igid,), form)
     else:
         api = getAPI(req)
         headers, response = api.execute(
@@ -81,8 +80,8 @@ def createIGroup(req, resp):
             headers, response = api.execute(
                 const.HTTP_POST, "/infrastructure/network/igroups", form)
             if 'id' in response:
-                id = response['id']
-                viewIGroup(req, resp, id=id)
+                igid = response['id']
+                viewIGroup(req, resp, igid=igid)
         except exceptions.HTTPBadRequest as e:
             form = model.IGroup(req.post, validate=False)
             ui.create(req, resp, content=form, title='Create Interface Group', error=[e])
@@ -91,48 +90,48 @@ def createIGroup(req, resp):
         ui.create(req, resp, content=form, title='Create Interface Group')
 
 
-def deleteIGroup(req, resp, id):
+def deleteIGroup(req, resp, igid):
     try:
         api = getAPI(req)
-        headers, response = api.execute(
-            const.HTTP_DELETE, "/infrastructure/network/igroup/%s" % (id,))
+        api.execute(
+            const.HTTP_DELETE, "/infrastructure/network/igroup/%s" % (igid,))
         viewIGroup(req, resp)
     except exceptions.HTTPBadRequest as e:
-        ui.edit(req, resp, content=form, id=id, title='Edit Interface Group')
+        ui.edit(req, resp, content=form, id=igid,
+                title='Edit Interface Group', error=[e])
 
 
-def viewService(req, resp, id=None):
-    return_format = req.headers.get('X-Format')
-    if id:
+def viewService(req, resp, sid=None):
+    return_format = req.headers.get('X-Format', None)
+    if sid:
         api = getAPI(req)
         headers, service = api.execute(
-            const.HTTP_GET, "/infrastructure/network/services/%s" % (id,))
-        if return_format == "fields":
-            fields = service['fields'].split(',')
-            return json.dumps(fields, indent=4)
-        elif return_format == "fields+igroup":
-            res = {}
-            if 'fields' in service:
-                res['fields'] = service['fields'].split(',')
-            else:
-                res['fields'] = None
-            res['igroup'] = service['interface_group']
-            return json.dumps(res, indent=4)
+            const.HTTP_GET, "/infrastructure/network/services/%s" % (sid,))
+        if return_format:
+            result = {}
+            if service['fields'] is not None:
+                if return_format == "fields":
+                    result = service['fields'].split(',')
+                elif return_format == "fields+igroup":
+                    result['fields'] = service['fields'].split(',')
+            if return_format == "fields+igroup":
+                result['igroup'] = service['interface_group']
+            return json.dumps(result, indent=4)
+
         templateFile = 'tachyonic.netrino_ui/service/createservice.html'
         t = jinja.get_template(templateFile)
-        renderValues = {}
-        renderValues['view'] = 'view'
-        renderValues['serviceID'] = id
-        renderValues['serviceName'] = service['name']
-        renderValues['interfaceGroup'] = service['interface_group']
-        renderValues['userRole'] = service['user_role']
-        renderValues['snippet'] = service['config_snippet']
-        renderValues['activate'] = service['activate_snippet']
-        renderValues['deactivate'] = service['deactivate_snippet']
-        renderValues['app'] = req.get_app()
+        renderValues = {'view': 'view',
+                        'serviceID': sid,
+                        'serviceName': service['name'],
+                        'interfaceGroup': service['interface_group'],
+                        'userRole': service['user_role'],
+                        'snippet': service['config_snippet'],
+                        'activate': service['activate_snippet'],
+                        'deactivate': service['deactivate_snippet'],
+                        'app': req.get_app()}
         form = t.render(**renderValues)
         title = service['name']
-        ui.view(req, resp, id=id, content=form, title=title)
+        ui.view(req, resp, id=sid, content=form, title=title)
     else:
         if return_format == "select2":
             api = getAPI(req)
@@ -146,7 +145,6 @@ def viewService(req, resp, id=None):
             title = 'Network Services'
             fields = OrderedDict()
             fields['name'] = 'Service Name'
-            # TODO:
             fields['user_role'] = 'Roles'
             fields['interface_group'] = 'Interface Group'
             dt = datatable(
@@ -156,7 +154,7 @@ def viewService(req, resp, id=None):
             ui.view(req, resp, content=dt, title=title)
 
 
-def editService(req, resp, id):
+def editService(req, resp, sid):
     if req.method == const.HTTP_POST:
         api = getAPI(req)
         values = req.post
@@ -166,26 +164,25 @@ def editService(req, resp, id):
         fields = getFields(snippet, activate_snippet, deactivate_snippet)
         form = model.NetworkService(req.post, validate=True)
         form['fields'] = fields
-        headers, response = api.execute(
-            const.HTTP_PUT, "/infrastructure/network/services/%s" % (id,), form)
+        api.execute(
+            const.HTTP_PUT, "/infrastructure/network/services/%s" % (sid,), form)
     else:
         api = getAPI(req)
         headers, service = api.execute(
-            const.HTTP_GET, "/infrastructure/network/services/%s" % (id,))
+            const.HTTP_GET, "/infrastructure/network/services/%s" % (sid,))
         templateFile = 'tachyonic.netrino_ui/service/createservice.html'
         t = jinja.get_template(templateFile)
-        renderValues = {}
-        renderValues['serviceID'] = id
-        renderValues['serviceName'] = service['name']
-        renderValues['interfaceGroup'] = service['interface_group']
-        renderValues['userRole'] = service['user_role']
-        renderValues['snippet'] = service['config_snippet']
-        renderValues['activate'] = service['activate_snippet']
-        renderValues['deactivate'] = service['deactivate_snippet']
-        renderValues['app'] = req.get_app()
+        renderValues = {'serviceID': sid,
+                        'serviceName': service['name'],
+                        'interfaceGroup': service['interface_group'],
+                        'userRole': service['user_role'],
+                        'snippet': service['config_snippet'],
+                        'activate': service['activate_snippet'],
+                        'deactivate': service['deactivate_snippet'],
+                        'app': req.get_app()}
         form = t.render(**renderValues)
         title = service['name']
-        ui.edit(req, resp, id=id, content=form, title=title)
+        ui.edit(req, resp, id=sid, content=form, title=title)
 
 
 def createService(req, resp, **kwargs):
@@ -203,7 +200,7 @@ def createService(req, resp, **kwargs):
                 const.HTTP_POST, "/infrastructure/network/services", form)
             if 'id' in response:
                 id = response['id']
-                viewService(req, resp, id=id)
+                viewService(req, resp, sid=id)
         except exceptions.HTTPBadRequest as e:
             req.method = const.HTTP_GET
             createService(req, resp, error=[e])
@@ -225,14 +222,14 @@ def createService(req, resp, **kwargs):
                   title='Create Network Service', **kwargs)
 
 
-def deleteService(req, resp, id):
+def deleteService(req, resp, sid):
     try:
         api = getAPI(req)
         headers, response = api.execute(
-            const.HTTP_DELETE, "/infrastructure/network/services/%s" % (id,))
+            const.HTTP_DELETE, "/infrastructure/network/services/%s" % (sid,))
         viewService(req, resp)
-    except Exception, e:  # hierdie gebeur nie met api.execute nie
-        editService(req, resp, id, error=[e])
+    except Exception as e:  # hierdie gebeur nie met api.execute nie
+        editService(req, resp, sid, error=[e])
 
 
 def viewDevice(req, resp, id=None, **kwargs):
@@ -368,7 +365,7 @@ def editDevice(req, resp, id):
     response_headers, device = api.execute(
         const.HTTP_GET, "/infrastructure/network/device/" + id)
     if device['id']:
-        renderValues['device_ip'] = dec2ip(int(id), 4)
+        renderValues['device_ip'] = int_to_ip(int(id), 4)
         renderValues['id'] = id
         renderValues['commstring'] = device['snmp_comm']
         renderValues['title'] = "Refresh " + device['name']
